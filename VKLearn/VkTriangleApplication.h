@@ -13,6 +13,7 @@ namespace Vkl {
 	private:
 		void initWindow();
 
+		void enumerateInstanceExtSupport() const;
 		void initVulkan();
 		void createVkInstance();
 

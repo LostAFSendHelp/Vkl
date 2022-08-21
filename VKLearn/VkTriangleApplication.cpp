@@ -1,5 +1,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <stdexcept>
+#include <vector>
+#include <iostream>
 #include "VkTriangleApplication.h"
 
 namespace Vkl {
@@ -28,7 +30,37 @@ namespace Vkl {
 		);
 	}
 
+	void VkTriangleApplication::enumerateInstanceExtSupport() const {
+		uint32_t extCount;
+		
+		auto result = vkEnumerateInstanceExtensionProperties(
+			nullptr,
+			&extCount,
+			nullptr
+		);
+
+		if (result != VK_SUCCESS) {
+			std::cout << "Failed to enumerate Vulkan Instance Extensions" << std::endl;
+			return;
+		}
+
+		std::vector<VkExtensionProperties> props{ extCount };
+
+		vkEnumerateInstanceExtensionProperties(
+			nullptr,
+			&extCount,
+			props.data()
+		);
+
+		std::cout << "Supported Instance extensions:" << std::endl;
+
+		for (const auto& prop : props) {
+			std::cout << "\t" << prop.extensionName << std::endl;
+		}
+	}
+
 	void VkTriangleApplication::initVulkan() {
+		enumerateInstanceExtSupport();
 		createVkInstance();
 	}
 
@@ -40,7 +72,7 @@ namespace Vkl {
 		appInfo.pEngineName = "VKL";
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 		appInfo.apiVersion = VK_API_VERSION_1_0;
-
+		
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
@@ -50,7 +82,7 @@ namespace Vkl {
 		auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtCount);
 		createInfo.enabledExtensionCount = glfwExtCount;
 		createInfo.ppEnabledExtensionNames = glfwExtensions;
-
+		
 		auto result = vkCreateInstance(
 			&createInfo,
 			nullptr,
@@ -69,6 +101,7 @@ namespace Vkl {
 	}
 
 	void VkTriangleApplication::cleanup() {
+		vkDestroyInstance(mVkInstance, nullptr);
 		glfwDestroyWindow(mWindow);
 		glfwTerminate();
 	}
