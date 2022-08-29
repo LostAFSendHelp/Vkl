@@ -59,8 +59,45 @@ namespace Vkl {
 		}
 	}
 
+	void VkTriangleApplication::requestValidationLayers(
+		uint32_t* layerCount,
+		const char** enabledLayers
+	) const {
+
+#ifdef NDEBUG
+		const auto enableValidationlayers = false;
+#else
+		const auto enableValidationLayers = true;
+#endif // NDEBUG
+		
+		if (!enableValidationLayers) {
+			*layerCount = 0u;
+			enabledLayers = nullptr;
+			return;
+		}
+
+		std::vector<const char*> requestedLayers{ "VK_LAYER_KHRONOS_validation" };
+		vkEnumerateInstanceLayerProperties(layerCount, nullptr);
+		
+		if (layerCount == 0u) {
+			throw std::runtime_error("No Vulkan Instance Layers found");
+		}
+
+		std::vector<VkLayerProperties> availableLayers{ *layerCount };
+		vkEnumerateInstanceLayerProperties(layerCount, availableLayers.data());
+
+		std::cout << *layerCount << " Instance Layers found:" << std::endl;
+		for (const auto& layer : availableLayers) {
+			std::cout << '\t' << layer.layerName << std::endl;
+		}
+	}
+
 	void VkTriangleApplication::initVulkan() {
 		enumerateInstanceExtSupport();
+
+		// remove this when continuing with the work
+		uint32_t count = 0;
+		requestValidationLayers(&count, nullptr);
 		createVkInstance();
 	}
 

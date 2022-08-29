@@ -14,6 +14,7 @@ namespace Vkl {
 		void initWindow();
 
 		void enumerateInstanceExtSupport() const;
+		void requestValidationLayers(uint32_t* layerCount, const char** enabledLayers) const;
 		void initVulkan();
 		void createVkInstance();
 
