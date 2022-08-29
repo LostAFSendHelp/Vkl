@@ -14,8 +14,7 @@ int main() {
 
 	try {
 		app.run();
-	}
-	catch (const std::exception& exc) {
+	} catch (const std::exception& exc) {
 		std::cout << exc.what() << std::endl;
 		return EXIT_FAILURE;
 	}
