@@ -135,10 +135,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Utils\Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VkTriangleApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Utils\Log.h" />
     <ClInclude Include="VkTriangleApplication.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

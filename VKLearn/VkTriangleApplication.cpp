@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cstring>
+#include <sstream>
 #include <fmt/format.h>
 #include "VkTriangleApplication.h"
 
@@ -12,14 +13,16 @@ namespace Vkl {
 #ifdef NDEBUG
 	const bool VkTriangleApplication::VALIDATION_LAYER_ENABLED{ false };
 #else
-	const bool VkTriangleApplication::VALIDATION_LAYER_ENABLED{ true };
+	const bool VkTriangleApplication::_VALIDATION_LAYER_ENABLED{ true };
 #endif // NDEBUG
 
-	void VkTriangleApplication::run() { 
+	void VkTriangleApplication::run() {
+		Log::initInstance();
 		_initWindow();
 		_initVulkan();
 		_mainLoop();
-		_cleanup(); 
+		_cleanup();
+		Log::destroyInstance();
 	}
 
 	void VkTriangleApplication::_initWindow() {
@@ -58,11 +61,12 @@ namespace Vkl {
 			props.data()
 		);
 
-		std::cout << "Supported Instance extensions:" << std::endl;
-
+		auto nameString = std::ostringstream{ };
 		for (const auto& prop : props) {
-			std::cout << "\t" << prop.extensionName << std::endl;
+			nameString << "\t" << prop.extensionName << std::endl;
 		}
+
+		VKL_INFO("Supported Instance extensions:\n{}", nameString.str());
 
 		// get required extensions
 		uint32_t glfwRequiredExtCount;
@@ -74,7 +78,7 @@ namespace Vkl {
 			glfwRequiredExtensions + glfwRequiredExtCount
 		};
 
-		if (VALIDATION_LAYER_ENABLED) {
+		if (_VALIDATION_LAYER_ENABLED) {
 			// require one more extension if validation layer is enabled
 			++requiredExtCount;
 			requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -88,14 +92,14 @@ namespace Vkl {
 
 			for (const auto& prop : props) {
 				if (!strcmp(extension, prop.extensionName)) {
-					std::cout << "Required extension " << extension << " FOUND" << std::endl;
+					VKL_INFO("Required extension {} FOUND", extension);
 					extensionFound = true;
 					break;
 				}
 			}
 
 			if (!extensionFound) {
-				std::cout << "Required extension " << extension << " MISSING" << std::endl;
+				VKL_ERR("Required extension {} MISSING", extension);
 				allRequiredExtensionsFound = false;
 				break;
 			}
@@ -111,13 +115,13 @@ namespace Vkl {
 
 	std::vector<const char*> VkTriangleApplication::_requestValidationLayers(uint32_t* layerCount) const {
 		// return nothing if validation layers are disabled
-		if (!VALIDATION_LAYER_ENABLED) {
-			std::cout << "Validation layer DISABLED" << std::endl;
+		if (!_VALIDATION_LAYER_ENABLED) {
+			VKL_INFO("Validation layer DISABLED");
 			*layerCount = 0u;
 			return {};
 		}
 
-		std::cout << "Validation layer ENABLED" << std::endl;
+		VKL_INFO("Validation layer ENABLED");
 
 		// enumerate available layers
 		uint32_t availableLayerCount;
@@ -130,10 +134,11 @@ namespace Vkl {
 		std::vector<VkLayerProperties> availableLayers{ availableLayerCount };
 		vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.data());
 
-		std::cout << availableLayerCount << " Instance Layers found:" << std::endl;
+		auto nameString = std::ostringstream{ };
 		for (const auto& layer : availableLayers) {
-			std::cout << '\t' << layer.layerName << std::endl;
+			nameString << '\t' << layer.layerName << std::endl;
 		}
+		VKL_INFO("{} Instance Layers found:\n{}", availableLayerCount, nameString.str());
 
 		// check for support for requested layers
 		std::vector<const char*> requestedLayers{ "VK_LAYER_KHRONOS_validation" };
@@ -144,14 +149,14 @@ namespace Vkl {
 
 			for (const auto& availableLayer : availableLayers) {
 				if (!strcmp(requestedLayer, availableLayer.layerName)) {
-					std::cout << "Requested extension " << requestedLayer << " FOUND" << std::endl;
+					VKL_INFO("Requested layer {} FOUND", requestedLayer);
 					layerFound = true;
 					break;
 				}
 			}
 
 			if (!layerFound) {
-				std::cout << "Requested extension " << requestedLayer << " MISSING" << std::endl;
+				VKL_INFO("Requested layer {} MISSING", requestedLayer);
 				allLayersFound = false;
 				break;
 			}
@@ -192,7 +197,7 @@ namespace Vkl {
 		createInfo.enabledLayerCount = enabledLayerCount;
 		createInfo.ppEnabledLayerNames = enabledLayerNames.data();
 
-		if (VALIDATION_LAYER_ENABLED) {
+		if (_VALIDATION_LAYER_ENABLED) {
 			auto debugMsgCreateInfo = _getDebugMessengerCreateInfo();
 			createInfo.pNext = &debugMsgCreateInfo;
 		}
@@ -209,7 +214,7 @@ namespace Vkl {
 	}
 
 	void VkTriangleApplication::_createDebugMessenger() {
-		if (!VALIDATION_LAYER_ENABLED) {
+		if (!_VALIDATION_LAYER_ENABLED) {
 			return;
 		}
 
@@ -237,7 +242,7 @@ namespace Vkl {
 	}
 
 	void VkTriangleApplication::_destroyDebugMessenger() {
-		if (!VALIDATION_LAYER_ENABLED) {
+		if (!_VALIDATION_LAYER_ENABLED) {
 			return;
 		}
 
@@ -294,13 +299,7 @@ namespace Vkl {
 		void* userData
 	) {
 		if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
-			auto message = fmt::format(
-				"[{}] Validation: {}",
-				messageType,
-				pCallbackData->pMessage
-			);
-
-			std::cerr << message << std::endl;
+			VKL_INFO("[{}] Validation: {}", messageType, pCallbackData->pMessage);
 		}
 
 		return VK_FALSE;

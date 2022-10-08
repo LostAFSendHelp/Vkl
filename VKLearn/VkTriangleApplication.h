@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
+#include "Utils/Log.h"
 
 namespace Vkl {
 	class VkTriangleApplication {
@@ -38,6 +39,6 @@ namespace Vkl {
 		VkInstance _vkInstance;
 		VkDebugUtilsMessengerEXT _vkDebugMessenger;
 
-		static const bool VALIDATION_LAYER_ENABLED;
+		static const bool _VALIDATION_LAYER_ENABLED;
 	};
 }  // namespace VKL

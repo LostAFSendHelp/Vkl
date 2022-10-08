@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "VKTriangleApplication.h"
+#include "Utils/Log.h"
 
 int main() {
 	Vkl::VkTriangleApplication app;
@@ -15,7 +16,7 @@ int main() {
 	try {
 		app.run();
 	} catch (const std::exception& exc) {
-		std::cout << exc.what() << std::endl;
+		VKL_ERR(exc.what());
 		return EXIT_FAILURE;
 	}
 
